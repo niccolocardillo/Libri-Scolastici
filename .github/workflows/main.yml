@@ -36,74 +36,18 @@ jobs:
               echo "🟢 Scarico $url → $filepath"
               curl -sSL "$url" -o "$filepath"
               gzip -9 "$filepath"
-              if [ -s "$filepath" ]; then
-                  git add "$filepath"
+              if [ -s "$filepath.gz" ]; then
+                  git add "$filepath.gz"
                   CHANGES=1
               else
                   echo "🔴 Il file $filename è vuoto o non valido. Lo rimuovo."
-                  rm -f "$filepath"
+                  rm -f "$filepath.gz"
               fi
           fi
           
           echo "✅ Download completato."
           echo "CHANGES=$CHANGES" >> $GITHUB_ENV
-          
-      - name: Scarica File Csv dei Libri
-        run: |
-          CODICE_DATA="000020250709"
-          
-          # Mappa regioni → codici CSV
-          declare -A regioni_csv=(
-            [abruzzo]="ALTABRUZZO"
-            [basilicata]="ALTBASILICATA"
-            [calabria]="ALTCALABRIA"
-            [campania]="ALTCAMPANIA"
-            [emilia_romagna]="ALTEMILIAROMAGNA"
-            [friuli_venezia_giulia]="ALTFRIULIVENEZIAGIULIA"
-            [lazio]="ALTLAZIO"
-            [liguria]="ALTLIGURIA"
-            [lombardia]="ALTLOMBARDIA"
-            [marche]="ALTMARCHE"
-            [molise]="ALTMOLISE"
-            [piemonte]="ALTPIEMONTE"
-            [puglia]="ALTPUGLIA"
-            [sardegna]="ALTSARDEGNA"
-            [sicilia]="ALTSICILIA"
-            [toscana]="ALTTOSCANA"
-            [trentino_alto_adige]="ALTTRENTINOALTOADIGE"
-            [umbria]="ALTUMBRIA"
-            [valle_d_aosta]="ALTVALLEDAOSTA"
-            [veneto]="ALTVENETO"
-          )
-
-          base_url="https://dati.istruzione.it/opendata/opendata/catalogo/elements1"
-          CHANGES=0
-          
-          for regione in "${!regioni_csv[@]}"; do
-            codice="${regioni_csv[$regione]}${CODICE_DATA}"
-            url="${base_url}/${codice}.csv"
-            filename=$(basename "$url")
-            filepath="data/$filename"
-
-            if [ -f "$filepath.gz" ]; then
-                echo "🟡 Il file $filepath esiste già. Salto."
-            else
-                echo "🟢 Scarico $url → $filepath"
-                curl -sSL "$url" -o "$filepath"
-                gzip -9 "$filepath"
-                if [ -s "$filepath" ]; then
-                    git add "$filepath"
-                    CHANGES=1
-                else
-                    echo "🔴 Il file $filename è vuoto o non valido. Lo rimuovo."
-                    rm -f "$filepath"
-                fi
-            fi
-          done
-          
-          echo "✅ Download completato."
-          echo "CHANGES=$CHANGES" >> $GITHUB_ENV
-
+      
       - name: Commit e push (se ci sono modifiche)
         if: env.CHANGES == '1'
         run: |
