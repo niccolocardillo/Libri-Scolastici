@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 3 * * *' # ogni giorno alle 3:00 UTC
-
+  
 permissions:
   contents: write
 
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Scarica File Csv delle Scuole
+      - name: Creo la Directory per i Csv
         run: |
           # Crea directory per i CSV
           mkdir -p data
@@ -118,3 +118,11 @@ jobs:
           unzip duckdb.zip
           chmod +x duckdb
           sudo mv duckdb /usr/local/bin/
+
+      - name: Crea database Libri.db
+        run: |
+          duckdb Libri.db < /scripts/schema.sql
+
+      - name: Importa i Csv nel database Libri.db
+        run: |
+          duckdb Libri.db < /scripts/import.sql
