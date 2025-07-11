@@ -127,7 +127,7 @@ jobs:
         run: |
           duckdb Libri.db < ./scripts/import.sql
 
-      - name: Importa i Csv nel database Libri.db
+      - name: Normalizzazione database Libri.db
         run: |
           duckdb Libri.db < ./scripts/transform.sql
 
