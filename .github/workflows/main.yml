@@ -126,3 +126,9 @@ jobs:
       - name: Importa i Csv nel database Libri.db
         run: |
           duckdb Libri.db < /scripts/import.sql
+
+      - name: Upload DB as artifact (opzionale)
+        uses: actions/upload-artifact@v4
+        with:
+          name: duckdb-database
+          path: Libri.db
