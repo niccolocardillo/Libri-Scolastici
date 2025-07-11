@@ -30,7 +30,7 @@ jobs:
           filename=$(basename "$url")
           filepath="data/$filename"
 
-          if [ -f "$filepath" ]; then
+          if [ -f "$filepath.gz" ]; then
               echo "🟡 Il file $filepath esiste già. Salto."
             else
               echo "🟢 Scarico $url → $filepath"
@@ -85,7 +85,7 @@ jobs:
             filename=$(basename "$url")
             filepath="data/$filename"
 
-            if [ -f "$filepath" ]; then
+            if [ -f "$filepath.gz" ]; then
                 echo "🟡 Il file $filepath esiste già. Salto."
             else
                 echo "🟢 Scarico $url → $filepath"
