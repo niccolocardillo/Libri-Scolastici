@@ -2,7 +2,7 @@ INSERT INTO LIBRI_RAW
 SELECT * FROM read_csv('./data/ALTABRUZZO000020250709.csv.gz', header = true, decimal_separator = ',');
 
 INSERT INTO LIBRI_RAW 
-SELECT * FROM read_csv('/data/ALTBASILICATA000020250709.csv.gz', header = true, decimal_separator = ',');
+SELECT * FROM read_csv('./data/ALTBASILICATA000020250709.csv.gz', header = true, decimal_separator = ',');
 
 INSERT INTO LIBRI_RAW 
 SELECT * FROM read_csv('./data/ALTCALABRIA000020250709.csv.gz', header = true, decimal_separator = ',');
