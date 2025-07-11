@@ -1,0 +1,120 @@
+name: Build Docker Image Database Libri
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # ogni giorno alle 3:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  download-csv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Scarica File Csv delle Scuole
+        run: |
+          # Crea directory per i CSV
+          mkdir -p data
+          
+      - name: Scarica File Csv delle Scuole
+        run: |
+          CHANGES=0
+          
+          url=https://dati.istruzione.it/opendata/opendata/catalogo/elements1/leaf/SCUANAGRAFESTAT20252620250901.csv
+
+          filename=$(basename "$url")
+          filepath="data/$filename"
+
+          if [ -f "$filepath" ]; then
+              echo "🟡 Il file $filepath esiste già. Salto."
+            else
+              echo "🟢 Scarico $url → $filepath"
+              curl -sSL "$url" -o "$filepath"
+              gzip -9 "$filepath"
+              if [ -s "$filepath" ]; then
+                  git add "$filepath"
+                  CHANGES=1
+              else
+                  echo "🔴 Il file $filename è vuoto o non valido. Lo rimuovo."
+                  rm -f "$filepath"
+              fi
+          fi
+          
+          echo "✅ Download completato."
+          echo "CHANGES=$CHANGES" >> $GITHUB_ENV
+          
+      - name: Scarica File Csv dei Libri
+        run: |
+          CODICE_DATA="000020250709"
+          
+          # Mappa regioni → codici CSV
+          declare -A regioni_csv=(
+            [abruzzo]="ALTABRUZZO"
+            [basilicata]="ALTBASILICATA"
+            [calabria]="ALTCALABRIA"
+            [campania]="ALTCAMPANIA"
+            [emilia_romagna]="ALTEMILIAROMAGNA"
+            [friuli_venezia_giulia]="ALTFRIULIVENEZIAGIULIA"
+            [lazio]="ALTLAZIO"
+            [liguria]="ALTLIGURIA"
+            [lombardia]="ALTLOMBARDIA"
+            [marche]="ALTMARCHE"
+            [molise]="ALTMOLISE"
+            [piemonte]="ALTPIEMONTE"
+            [puglia]="ALTPUGLIA"
+            [sardegna]="ALTSARDEGNA"
+            [sicilia]="ALTSICILIA"
+            [toscana]="ALTTOSCANA"
+            [trentino_alto_adige]="ALTTRENTINOALTOADIGE"
+            [umbria]="ALTUMBRIA"
+            [valle_d_aosta]="ALTVALLEDAOSTA"
+            [veneto]="ALTVENETO"
+          )
+
+          base_url="https://dati.istruzione.it/opendata/opendata/catalogo/elements1"
+          CHANGES=0
+          
+          for regione in "${!regioni_csv[@]}"; do
+            codice="${regioni_csv[$regione]}${CODICE_DATA}"
+            url="${base_url}/${codice}.csv"
+            filename=$(basename "$url")
+            filepath="data/$filename"
+
+            if [ -f "$filepath" ]; then
+                echo "🟡 Il file $filepath esiste già. Salto."
+            else
+                echo "🟢 Scarico $url → $filepath"
+                curl -sSL "$url" -o "$filepath"
+                gzip -9 "$filepath"
+                if [ -s "$filepath" ]; then
+                    git add "$filepath"
+                    CHANGES=1
+                else
+                    echo "🔴 Il file $filename è vuoto o non valido. Lo rimuovo."
+                    rm -f "$filepath"
+                fi
+            fi
+          done
+          
+          echo "✅ Download completato."
+          echo "CHANGES=$CHANGES" >> $GITHUB_ENV
+
+      - name: Commit e push (se ci sono modifiche)
+        if: env.CHANGES == '1'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git commit -m "Aggiunti nuovi file CSV da URL remoti"
+          git push
+
+      - name: Set up DuckDB
+        run: |
+          curl -L https://github.com/duckdb/duckdb/releases/download/v1.3.2/duckdb_cli-linux-amd64.zip -o duckdb.zip
+          unzip duckdb.zip
+          chmod +x duckdb
+          sudo mv duckdb /usr/local/bin/
