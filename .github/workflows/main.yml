@@ -127,6 +127,10 @@ jobs:
         run: |
           duckdb Libri.db < ./scripts/import.sql
 
+      - name: Importa i Csv nel database Libri.db
+        run: |
+          duckdb Libri.db < ./scripts/transform.sql
+
       - name: Comprimi Database Libri.db
         run: |
           gzip -9 Libri.db
